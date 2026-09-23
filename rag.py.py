@@ -80,4 +80,11 @@ SYSTEM_PROMT = """You are a transaction assistant for phonepe style payment app.
         </context>
         """
 
-# 47.50
+prompt = ChatPromptTemplate([
+    ("system", SYSTEM_PROMT),
+    ("human", "{input}")
+])
+
+
+document_chain = create_stuff_documents_chain(LLM, prompt)
+retriever_chain = create_retrieval_chain(retriever, document_chain)
