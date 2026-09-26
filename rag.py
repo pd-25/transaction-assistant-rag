@@ -1,3 +1,5 @@
+import datetime
+
 from fastapi import FastAPI
 from pydantic import BaseModel
 import os, json
@@ -80,11 +82,26 @@ SYSTEM_PROMT = """You are a transaction assistant for phonepe style payment app.
         </context>
         """
 
-prompt = ChatPromptTemplate([
-    ("system", SYSTEM_PROMT),
-    ("human", "{input}")
-])
+prompt = ChatPromptTemplate([("system", SYSTEM_PROMT), ("human", "{input}")])
 
 
 document_chain = create_stuff_documents_chain(LLM, prompt)
 retriever_chain = create_retrieval_chain(retriever, document_chain)
+
+
+class QueryRequest(BaseModel):
+    query: str
+
+
+@app.post("query")
+def ask_question(request: QueryRequest):
+    try:
+        response = retriever_chain.invoke({"input": request.query})
+        return {"status": True, "answer": response["answer"]}
+    except Exception as e:
+        return {"status": False, "answer": str(e)}
+
+    
+@app.get('/health')
+def health_check():
+    return {'succes': True, 'time': datetime.datetime.now()}
